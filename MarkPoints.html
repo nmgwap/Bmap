@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico" rel="external nofollow" />
+    <title>添加标注点-百度地图API</title>
+    <!-- css样式文件 -->
+    <style type="text/css">
+        html,
+        body,
+        #container {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            overflow: hidden;
+            padding: 0px;
+            margin: 0px;
+        }
+        
+        .info_ul {
+            margin: 0 0 5px 0;
+            padding: 0.2em 0;
+        }
+        
+        .info_ui_img {
+            background-image: url("images/error.png");
+            background-position: 97% 0%;
+            background-repeat: no-repeat;
+            background-size: 50px;
+        }
+        
+        .info_ui_Nimg {
+            background-image: url("images/carNormal.png");
+            background-position: 97% 0%;
+            background-repeat: no-repeat;
+            background-size: 40px;
+        }
+        
+        .info_li {
+            line-height: 26px;
+            font-size: 15px;
+            color: #0C8816;
+        }
+        
+        .info_lierr {
+            line-height: 26px;
+            font-size: 15px;
+            color: #D81E06;
+            border: none;
+        }
+        
+        .info_span {
+            width: 80px;
+            display: inline-block;
+        }
+        
+        .btn {
+            width: 80px;
+            text-align: center;
+            height: 30px;
+            line-height: 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #D81E06;
+            color: #fff;
+            margin: 0 auto;
+        }
+        
+        .ta-c {
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 地图盒子 -->
+    <div id="container"></div>
+    <!-- js文件 -->
+    <script type="text/javascript" src="http://api.map.baidu.com/api?key=&v=1.3&services=true"></script>
+    <!-- 页面地图js方法 -->
+    <script type="text/javascript">
+        // 创建假数据
+        var points = [{
+            "lng": 116.316967,
+            "lat": 39.990748,
+            "type": "正常",
+            "name": "ET930071255",
+            "place": "上海长宁"
+
+        }, {
+            "lng": 116.323938,
+            "lat": 39.989919,
+            "type": "正常",
+            "name": "ET930071254",
+            "place": "上海长宁"
+        }, {
+            "lng": 116.328896,
+            "lat": 39.988039,
+            "type": "故障",
+            "name": "ET930071223",
+            "place": "上海长宁"
+        }, {
+            "lng": 116.321135,
+            "lat": 39.987072,
+            "type": "正常",
+            "name": "ET930071265",
+            "place": "上海长宁"
+        }, {
+            "lng": 116.332453,
+            "lat": 39.989007,
+            "type": "正常",
+            "name": "ET930071223",
+            "place": "上海长宁"
+        }, {
+            "lng": 116.324045,
+            "lat": 39.987984,
+            "type": "故障",
+            "name": "ET930071256",
+            "place": "上海长宁金钟路633号"
+        }, {
+            "lng": 116.322285,
+            "lat": 39.988316,
+            "type": "正常",
+            "name": "ET93007154",
+            "place": "上海长宁"
+        }, {
+            "lng": 116.322608,
+            "lat": 39.986381,
+            "type": "正常",
+            "name": "ET930071256",
+            "place": "上海长宁"
+        }, {
+            "lng": 116.322008,
+            "lat": 39.986551,
+            "type": "正常",
+            "name": "ET9300787",
+            "place": "上海长宁"
+        }, {
+            "lng": 116.322666,
+            "lat": 39.986666,
+            "type": "正常",
+            "name": "ET9300712",
+            "place": "上海长宁"
+        }, {
+            "lng": 116.325608,
+            "lat": 39.984381,
+            "type": "故障",
+            "name": "ET9300791",
+            "place": "上海长宁金钟路633号上海长宁金钟路633号上海长宁金钟路633号上海长宁金钟路633号"
+        }];
+
+        // 在指定容器创建地图实例并设置最大最小缩放级别
+        var map = new BMap.Map("container", {
+            minZoom: 5,
+            maxZoom: 19
+        });
+
+        //初始化地图，设置中心点和显示级别
+        map.centerAndZoom(new BMap.Point(116.316967, 39.990748), 15);
+
+        //开启鼠标滚轮缩放功能，仅对PC上有效
+        map.enableScrollWheelZoom(true);
+
+        // 将控件（平移缩放控件）添加到地图上
+        map.addControl(new BMap.NavigationControl());
+
+        //添加标注
+        addMarker(points);
+
+        // 创建图标对象   
+        function addMarker(points) {
+            var point, marker;
+            // 创建标注对象并添加到地图   
+            for (var i = 0, pointsLen = points.length; i < pointsLen; i++) {
+                point = new BMap.Point(points[i].lng, points[i].lat);
+                var myIcon;
+                // 判断正常或者故障，根据不同装填显示不同Icon
+                if (points[i].type == "故障") {
+                    myIcon = new BMap.Icon("images/fault.png", new BMap.Size(32, 32), {
+                        // 指定定位位置
+                        offset: new BMap.Size(16, 32),
+                        // 当需要从一幅较大的图片中截取某部分作为标注图标时，需要指定大图的偏移位置    
+                        //imageOffset: new BMap.Size(0, -12 * 25) 
+                    });
+                } else {
+                    myIcon = new BMap.Icon("images/normal.png", new BMap.Size(32, 32), {
+                        // 指定定位位置
+                        offset: new BMap.Size(16, 32),
+                        // 当需要从一幅较大的图片中截取某部分作为标注图标时，需要指定大图的偏移位置 
+                        //imageOffset: new BMap.Size(0, -12 * 25)   
+                    });
+                };
+                // 创建一个图像标注实例
+                marker = new BMap.Marker(point, {
+                    icon: myIcon
+                });
+                // 将覆盖物添加到地图上
+                map.addOverlay(marker);
+
+                //给标注点添加点击事件
+                (function() {
+                    var thePoint = points[i];
+                    marker.addEventListener("click", function() {
+                        showInfo(this, thePoint);
+                    });
+                })();
+            }
+        };
+
+        //显示信息窗口，显示标注点的信息
+        function showInfo(thisMaker, point) {
+            var sContent = '';
+            if (point.type == "故障") {
+                sContent += '<ul class="info_ul info_ui_img">';
+                sContent += '   <li class="info_lierr">';
+                sContent += '       <span class="info_span">出车状态：</span>';
+                sContent += '       <span>' + point.type + '</span>';
+                sContent += '   </li>';
+                sContent += '   <li class="info_lierr">';
+                sContent += '       <span class="info_span">机器编号：</span>';
+                sContent += '       <span>' + point.name + '</span>';
+                sContent += '   </li>';
+                sContent += '   <li class="info_lierr">';
+                sContent += '       <span class="info_span">所在地点：</span>';
+                sContent += '       <span>' + point.place + '</span>';
+                sContent += '   </li>';
+                sContent += '   <li class="ta-c info_lierr">';
+                sContent += '       <div class="btn" onclick=func("' + point.name + '")>' + "检修" + '</div>';
+                sContent += '   </li>';
+                sContent += '</ul>';
+            } else {
+                sContent += '<ul class="info_ul info_ui_Nimg">';
+                sContent += '   <li class="info_li">';
+                sContent += '       <span class="info_span">出车状态：</span>';
+                sContent += '       <span>' + point.type + '</span>';
+                sContent += '   </li>';
+                sContent += '   <li class="info_li">';
+                sContent += '       <span class="info_span">机器编号：</span>';
+                sContent += '       <span>' + point.name + '</span>';
+                sContent += '   </li>';
+                sContent += '   <li class="info_li">';
+                sContent += '       <span class="info_span">所在地点：</span>';
+                sContent += '       <span>' + point.place + '</span>';
+                sContent += '   </li>';
+                sContent += '</ul>';
+            }
+
+            // 创建信息窗口对象
+            var infoWindow = new BMap.InfoWindow(sContent);
+
+            //图片加载完毕重绘infowindow
+            thisMaker.openInfoWindow(infoWindow);
+        };
+
+        // 弹窗增加点击事件
+        function func(data) {
+            alert("点击了机器编号为：" + data + "\n已经提交检修");
+        }
+    </script>
+</body>
+
+</html>

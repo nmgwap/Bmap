@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico" rel="external nofollow" />
+    <title>运动轨迹-百度地图API</title>
+    <!-- css样式文件 -->
+    <style type="text/css">
+        html,
+        body,
+        #baiduMap {
+            width: 100%;
+            height: 100%;
+            margin: 0px;
+            padding: 0px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 地图盒子 -->
+    <div id="baiduMap"></div>
+    <!-- js文件 -->
+    <script type="text/javascript" src="http://api.map.baidu.com/api?key=&v=1.3&services=true"></script>
+    <!-- 页面js文件 -->
+    <script type="text/javascript">
+        // 创建假数据
+        var pointArr = [{
+            "lng": 121.324695,
+            "lat": 31.218586
+        }, {
+            "lng": 121.325162,
+            "lat": 31.216309
+        }, {
+            "lng": 121.328432,
+            "lat": 31.216649
+        }, {
+            "lng": 121.341341,
+            "lat": 31.218332
+        }, {
+            "lng": 121.349758,
+            "lat": 31.218131
+        }, {
+            "lng": 121.35451,
+            "lat": 31.216131
+        }, {
+            "lng": 121.355916,
+            "lat": 31.215767
+        }, {
+            "lng": 121.359815,
+            "lat": 31.215419
+        }, {
+            "lng": 121.363381,
+            "lat": 31.215079
+        }, {
+            "lng": 121.363336,
+            "lat": 31.21511
+        }, {
+            "lng": 121.36277,
+            "lat": 31.220283
+        }, {
+            "lng": 121.362222,
+            "lat": 31.224413
+        }, {
+            "lng": 121.361692,
+            "lat": 31.226583
+        }, {
+            "lng": 121.365115,
+            "lat": 31.226397
+        }, {
+            "lng": 121.367778,
+            "lat": 31.226145
+        }, {
+            "lng": 121.371236,
+            "lat": 31.225774
+        }, {
+            "lng": 121.371174,
+            "lat": 31.22362
+        }];
+
+        //在指定容器创建地图实例并设置最大最小缩放级别 
+        var map = new BMap.Map("baiduMap", {
+            minZoom: 5,
+            maxZoom: 19
+        });
+
+        // 初始化地图，设置中心点和显示级别
+        map.centerAndZoom(new BMap.Point(116.404, 39.915), 15);
+
+        // 开启鼠标滚轮缩放功能，仅对PC上有效
+        map.enableScrollWheelZoom();
+
+        // 将控件（平移缩放控件）添加到地图上
+        map.addControl(new BMap.NavigationControl());
+
+        // 地图定位到第一个点，显示级别为15
+        map.centerAndZoom(pointArr[0], 15);
+
+        // 使用浏览器的矢量图制图工具，在地图上绘制折线的地图叠加层
+        var polyline = new BMap.Polyline(pointArr, {
+            strokeColor: "#0C8816",
+            strokeWeight: 3,
+            setStrokeStyle: "dashed",
+            strokeOpacity: 1
+        });
+
+        // 将覆盖物（线）添加到地图上
+        map.addOverlay(polyline);
+
+        // 
+        for (var i = 0, j = pointArr.length; i < j; i++) {
+            var myIcon;
+            if (i == 0) {
+                myIcon = new BMap.Icon("images/start.png", new BMap.Size(32, 32), {
+                    // 指定定位位置
+                    offset: new BMap.Size(10, 32),
+                });
+            } else if (i == pointArr.length - 1) {
+                myIcon = new BMap.Icon("images/end.png", new BMap.Size(32, 32), {
+                    // 指定定位位置
+                    offset: new BMap.Size(32, 32),
+                });
+            } else {
+                myIcon = new BMap.Icon("images/transparent.png", new BMap.Size(32, 32), {
+                    // 指定定位位置
+                    offset: new BMap.Size(32, 32),
+                });
+            };
+            var marker = new BMap.Marker(pointArr[i], {
+                icon: myIcon
+            });
+
+            map.addOverlay(marker);
+        };
+
+        //根据经纬极值计算绽放级别。
+        function getZoom(maxLng, minLng, maxLat, minLat) {
+            // 级别18到3。
+            var zoom = ["50", "100", "200", "500", "1000", "2000", "5000", "10000", "20000", "25000", "50000", "100000", "200000", "500000", "1000000", "2000000"];
+            // 创建点坐标A
+            var pointA = new BMap.Point(maxLng, maxLat);
+            // 创建点坐标B
+            var pointB = new BMap.Point(minLng, minLat);
+            //获取两点距离,保留小数点后两位
+            var distance = map.getDistance(pointA, pointB).toFixed(1);
+            for (var i = 0, zoomLen = zoom.length; i < zoomLen; i++) {
+                if (zoom[i] - distance > 0) {
+                    //之所以会多3，是因为地图范围常常是比例尺距离的10倍以上。所以级别会增加3。
+                    return 18 - i + 3;
+                }
+            }
+        };
+
+        // 判断最大和最小经纬度
+        function setZoom(points) {
+            if (points.length > 0) {
+                var maxLng = points[0].lng;
+                var minLng = points[0].lng;
+                var maxLat = points[0].lat;
+                var minLat = points[0].lat;
+                var res;
+                for (var i = points.length - 1; i >= 0; i--) {
+                    res = points[i];
+                    if (res.lng > maxLng) maxLng = res.lng;
+                    if (res.lng < minLng) minLng = res.lng;
+                    if (res.lat > maxLat) maxLat = res.lat;
+                    if (res.lat < minLat) minLat = res.lat;
+                }
+                var cenLng = (parseFloat(maxLng) + parseFloat(minLng)) / 2;
+                var cenLat = (parseFloat(maxLat) + parseFloat(minLat)) / 2;
+                var zoom = getZoom(maxLng, minLng, maxLat, minLat);
+                map.centerAndZoom(new BMap.Point(cenLng, cenLat), zoom);
+            } else {
+                //没有坐标，显示全中国
+                map.centerAndZoom(new BMap.Point(103.388611, 35.563611), 5);
+            }
+        };
+
+        setZoom(pointArr);
+    </script>
+</body>
+
+</html>
